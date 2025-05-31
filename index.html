@@ -1,1 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手速测试挑战</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: block;
+            width: 100%;
+            margin: 15px 0;
+        }
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-primary {
+            background: #2ecc71;
+        }
+        .btn-primary:hover {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .counter-display {
+            font-size: 5rem;
+            text-align: center;
+            font-weight: bold;
+            color: #3498db;
+            margin: 20px 0;
+            transition: all 0.2s;
+        }
+        .timer {
+            font-size: 2rem;
+            text-align: center;
+            margin: 15px 0;
+            color: #e74c3c;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .hidden {
+            display: none;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .user-info {
+            text-align: right;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ 手速测试挑战</h1>
+        
+        <div class="user-info" id="userInfo">
+            未登录 | <a href="#" id="logoutLink">退出</a>
+        </div>
+        
+        <!-- 登录/注册面板 -->
+        <div class="panel" id="authPanel">
+            <h2>🔑 用户登录/注册</h2>
+            <div id="authMessage" class="message hidden"></div>
+            
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="输入用户名">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="输入密码">
+            </div>
+            
+            <button class="btn btn-primary" id="loginBtn">登录</button>
+            <button class="btn" id="registerBtn">注册新账号</button>
+        </div>
+        
+        <!-- 游戏面板 -->
+        <div class="panel hidden" id="gamePanel">
+            <h2>🎮 手速测试</h2>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="highScore">0</div>
+                    <div class="stat-label">最高分</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="currentScore">0</div>
+                    <div class="stat-label">当前分数</div>
+                </div>
+            </div>
+            
+            <div class="timer" id="timer">准备开始</div>
+            <div class="counter-display" id="counter">0</div>
+            
+            <button class="btn btn-primary" id="startBtn">开始挑战</button>
+            <button class="btn btn-danger" id="resetBtn">重置游戏</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const authPanel = document.getElementById('authPanel');
+        const gamePanel = document.getElementById('gamePanel');
+        const userInfo = document.getElementById('userInfo');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const logoutLink = document.getElementById('logoutLink');
+        const authMessage = document.getElementById('authMessage');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const counterDisplay = document.getElementById('counter');
+        const timerDisplay = document.getElementById('timer');
+        const currentScoreDisplay = document.getElementById('currentScore');
+        const highScoreDisplay = document.getElementById('highScore');
+        
+        // 游戏状态
+        let isPlaying = false;
+        let clickCount = 0;
+        let timer;
+        let timeLeft = 10;
+        let currentUser = null;
+        
+        // 初始化页面
+        function initPage() {
+            // 检查本地存储中是否有用户数据
+            const savedUsers = localStorage.getItem('users');
+            const savedScores = localStorage.getItem('highScores');
+            
+            if (!savedUsers) {
+                localStorage.setItem('users', JSON.stringify({}));
+            }
+            
+            if (!savedScores) {
+                localStorage.setItem('highScores', JSON.stringify({}));
+            }
+            
+            // 检查是否有已登录用户
+            const loggedInUser = localStorage.getItem('currentUser');
+            if (loggedInUser) {
+                currentUser = loggedInUser;
+                updateUserInfo();
+                showGamePanel();
+            }
+        }
+        
+        // 更新用户信息显示
+        function updateUserInfo() {
+            userInfo.innerHTML = `${currentUser} | <a href="#" id="logoutLink">退出</a>`;
+            
+            // 更新最高分显示
+            const highScores = JSON.parse(localStorage.getItem('highScores') || '{}');
+            const userHighScore = highScores[currentUser] || 0;
+            highScoreDisplay.textContent = userHighScore;
+        }
+        
+        // 显示游戏面板
+        function showGamePanel() {
+            authPanel.classList.add('hidden');
+            gamePanel.classList.remove('hidden');
+        }
+        
+        // 显示登录面板
+        function showAuthPanel() {
+            authPanel.classList.remove('hidden');
+            gamePanel.classList.add('hidden');
+        }
+        
+        // 显示消息
+        function showMessage(message, isError = false) {
+            authMessage.textContent = message;
+            authMessage.className = isError ? 'message error' : 'message success';
+            authMessage.classList.remove('hidden');
+            
+            // 3秒后隐藏消息
+            setTimeout(() => {
+                authMessage.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // 用户注册
+        function registerUser() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!username || !password) {
+                showMessage('用户名和密码不能为空', true);
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            
+            if (users[username]) {
+                showMessage('用户名已存在', true);
+                return;
+            }
+            
+            // 存储用户（实际应用中应对密码进行哈希处理）
+            users[username] = password;
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // 初始化高分记录
+            const highScores = JSON.parse(localStorage.getItem('highScores') || '{}');
+            if (!highScores[username]) {
+                highScores[username] = 0;
+                localStorage.setItem('highScores', JSON.stringify(highScores));
+            }
+            
+            showMessage('注册成功！请登录');
+            usernameInput.value = '';
+            passwordInput.value = '';
+        }
+        
+        // 用户登录
+        function loginUser() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!username || !password) {
+                showMessage('用户名和密码不能为空', true);
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            
+            if (!users[username] || users[username] !== password) {
+                showMessage('用户名或密码错误', true);
+                return;
+            }
+            
+            // 登录成功
+            currentUser = username;
+            localStorage.setItem('currentUser', username);
+            updateUserInfo();
+            showGamePanel();
+            
+            usernameInput.value = '';
+            passwordInput.value = '';
+        }
+        
+        // 用户退出
+        function logoutUser() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            userInfo.innerHTML = '未登录 | <a href="#" id="logoutLink">退出</a>';
+            showAuthPanel();
+        }
+        
+        // 开始游戏
+        function startGame() {
+            if (!currentUser) {
+                showAuthPanel();
+                showMessage('请先登录', true);
+                return;
+            }
+            
+            isPlaying = true;
+            clickCount = 0;
+            timeLeft = 10;
+            
+            counterDisplay.textContent = '0';
+            timerDisplay.textContent = `剩余时间: ${timeLeft}秒`;
+            timerDisplay.style.color = '#e74c3c';
+            
+            startBtn.disabled = true;
+            startBtn.textContent = '游戏中...';
+            
+            // 更新计数器
+            counterDisplay.addEventListener('click', handleClick);
+            
+            // 开始倒计时
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `剩余时间: ${timeLeft}秒`;
+                
+                if (timeLeft <= 3) {
+                    timerDisplay.style.color = '#c0392b';
+                    timerDisplay.style.fontWeight = 'bold';
+                }
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // 处理点击
+        function handleClick() {
+            if (!isPlaying) return;
+            
+            clickCount++;
+            counterDisplay.textContent = clickCount;
+            currentScoreDisplay.textContent = clickCount;
+            
+            // 添加点击动画效果
+            counterDisplay.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                counterDisplay.style.transform = 'scale(1)';
+            }, 100);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            clearInterval(timer);
+            isPlaying = false;
+            
+            // 移除点击监听
+            counterDisplay.removeEventListener('click', handleClick);
+            
+            // 更新按钮状态
+            startBtn.disabled = false;
+            startBtn.textContent = '开始挑战';
+            
+            // 显示结果
+            timerDisplay.textContent = '时间到！';
+            timerDisplay.style.color = '#2c3e50';
+            
+            // 保存分数
+            saveScore();
+        }
+        
+        // 保存分数
+        function saveScore() {
+            if (!currentUser) return;
+            
+            const highScores = JSON.parse(localStorage.getItem('highScores') || '{}');
+            const currentHighScore = highScores[currentUser] || 0;
+            
+            if (clickCount > currentHighScore) {
+                highScores[currentUser] = clickCount;
+                localStorage.setItem('highScores', JSON.stringify(highScores));
+                highScoreDisplay.textContent = clickCount;
+                
+                // 显示新纪录消息
+                timerDisplay.textContent = `🎉 新纪录: ${clickCount}次点击！`;
+                timerDisplay.style.color = '#27ae60';
+            }
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            clearInterval(timer);
+            isPlaying = false;
+            clickCount = 0;
+            timeLeft = 10;
+            
+            counterDisplay.textContent = '0';
+            timerDisplay.textContent = '准备开始';
+            timerDisplay.style.color = '#e74c3c';
+            currentScoreDisplay.textContent = '0';
+            
+            startBtn.disabled = false;
+            startBtn.textContent = '开始挑战';
+            
+            counterDisplay.removeEventListener('click', handleClick);
+        }
+        
+        // 事件监听
+        loginBtn.addEventListener('click', loginUser);
+        registerBtn.addEventListener('click', registerUser);
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoutUser();
+        });
+        startBtn.addEventListener('click', startGame);
+        resetBtn.addEventListener('click', resetGame);
+        
+        // 初始化页面
+        initPage();
+    </script>
+</body>
+</html>
 
