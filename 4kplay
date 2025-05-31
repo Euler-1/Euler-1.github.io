@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4K节奏大师 - 网页音游</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0d0b23, #252147, #1c1935);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(10, 15, 35, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(80, 100, 255, 0.4);
+        }
+        
+        .game-header {
+            text-align: center;
+            padding: 15px 0;
+            background: rgba(15, 20, 45, 0.7);
+            border-bottom: 1px solid rgba(100, 120, 255, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #ff6ec4, #7873f5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(120, 115, 245, 0.6);
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-top: 8px;
+            color: #b8c2ff;
+        }
+        
+        .game-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            padding: 25px;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .game-board {
+            background: rgba(20, 25, 45, 0.6);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 30, 0.8);
+            border: 1px solid rgba(80, 100, 255, 0.3);
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .track-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            height: 500px;
+            position: relative;
+            gap: 2px;
+        }
+        
+        .lane {
+            position: relative;
+            background: rgba(15, 20, 40, 0.6);
+            overflow: hidden;
+        }
+        
+        .lane:nth-child(1) { border-radius: 8px 0 0 8px; }
+        .lane:nth-child(4) { border-radius: 0 8px 8px 0; }
+        
+        .lane::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent 98%, rgba(100, 120, 255, 0.2) 98%);
+            background-size: 100% 40px;
+        }
+        
+        .judgment-line {
+            position: absolute;
+            bottom: 20%;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #ff6ec4, #7873f5, transparent);
+            box-shadow: 0 0 15px #7873f5;
+            z-index: 10;
+        }
+        
+        .hit-area {
+            position: absolute;
+            bottom: 12%;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10%;
+            z-index: 20;
+        }
+        
+        .hit-key {
+            width: 60px;
+            height: 100%;
+            background: rgba(40, 50, 90, 0.7);
+            border: 2px solid rgba(100, 120, 255, 0.5);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: rgba(220, 220, 255, 0.9);
+            font-size: 1.5rem;
+            font-weight: bold;
+            transition: all 0.1s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+        
+        .hit-key.active {
+            background: rgba(255, 110, 196, 0.4);
+            box-shadow: 0 0 25px rgba(255, 110, 196, 0.7);
+            transform: scale(0.95);
+        }
+        
+        .note {
+            position: absolute;
+            width: 70%;
+            left: 15%;
+            height: 20px;
+            border-radius: 8px 8px 4px 4px;
+            z-index: 5;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+        }
+        
+        .lane1 .note { background: linear-gradient(to bottom, #ff6ec4, #c54fd3); }
+        .lane2 .note { background: linear-gradient(to bottom, #6a85ff, #4a6ae7); }
+        .lane3 .note { background: linear-gradient(to bottom, #6aecff, #46c5ff); }
+        .lane4 .note { background: linear-gradient(to bottom, #7dff7a, #5cde48); }
+        
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .game-stats {
+            background: rgba(20, 25, 45, 0.6);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 0 15px rgba(0, 10, 30, 0.8);
+            border: 1px solid rgba(80, 100, 255, 0.3);
+            color: white;
+        }
+        
+        .stat-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            background: rgba(35, 40, 70, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 120, 255, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6ec4, #7873f5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            text-shadow: 0 0 15px rgba(120, 115, 245, 0.4);
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            color: #b8c2ff;
+        }
+        
+        .combo-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.4rem;
+            margin-top: 15px;
+            background: rgba(30, 35, 70, 0.5);
+            padding: 15px;
+            border-radius: 15px;
+            color: #ffec65;
+        }
+        
+        .combo-value {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 0 15px;
+            text-shadow: 0 0 20px rgba(255, 236, 101, 0.8);
+            color: #fff;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .difficulty-selector {
+            background: rgba(20, 25, 45, 0.6);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: inset 0 0 15px rgba(0, 10, 30, 0.8);
+            border: 1px solid rgba(80, 100, 255, 0.3);
+            color: white;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #7873f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .difficulty-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .difficulty-btn {
+            padding: 15px 10px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #2c3e50, #253046);
+            color: #d0d9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: 1px solid rgba(100, 120, 255, 0.3);
+        }
+        
+        .difficulty-btn:hover {
+            transform: translateY(-3px);
+            color: white;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .difficulty-btn.selected {
+            background: linear-gradient(45deg, #ff6ec4, #7873f5);
+            color: white;
+            box-shadow: 0 0 20px rgba(120, 115, 245, 0.6);
+        }
+        
+        .controls {
+            background: rgba(20, 25, 45, 0.6);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 0 15px rgba(0, 10, 30, 0.8);
+            border: 1px solid rgba(80, 100, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .action-btn {
+            padding: 16px 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+        
+        .action-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+        
+        .action-btn:hover::before {
+            left: 100%;
+        }
+        
+        .play-btn {
+            background: linear-gradient(45deg, #00b86d, #00c896);
+            color: white;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(45deg, #ff7b4c, #ff5e62);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .judgment-effect {
+            position: absolute;
+            bottom: 30%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 3.5rem;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            text-shadow: 0 0 15px currentColor;
+            z-index: 100;
+        }
+        
+        .perfect {
+            color: #ffec65;
+        }
+        
+        .great {
+            color: #7dff7a;
+        }
+        
+        .good {
+            color: #6a85ff;
+        }
+        
+        .bad {
+            color: #ff6ec4;
+        }
+        
+        .miss {
+            color: #ff5e62;
+        }
+        
+        .combo-effect {
+            position: absolute;
+            bottom: 40%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #ffec65;
+            text-shadow: 0 0 20px rgba(255, 236, 101, 0.8);
+            opacity: 0;
+            z-index: 90;
+            transform: scale(0.5);
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .game-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .track-container {
+                height: 400px;
+            }
+            
+            .game-header h1 {
+                font-size: 2rem;
+            }
+            
+            .stat-value {
+                font-size: 2rem;
+            }
+            
+            .hit-key {
+                width: 50px;
+                font-size: 1.3rem;
+            }
+            
+            .combo-value {
+                font-size: 3rem;
+            }
+        }
+        
+        .game-footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+            color: #a0a8e0;
+            border-top: 1px solid rgba(100, 120, 255, 0.2);
+        }
+        
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            padding: 10px;
+            font-size: 12px;
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 200;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>4K节奏大师 <i class="fas fa-music"></i></h1>
+            <div class="subtitle">使用 D, F, J, K 键击中下落的音符，挑战最高分数！</div>
+        </div>
+        
+        <div class="game-content">
+            <div class="game-area">
+                <div class="game-board">
+                    <div class="track-container">
+                        <div class="lane lane1">
+                            <div class="judgment-line"></div>
+                        </div>
+                        <div class="lane lane2">
+                            <div class="judgment-line"></div>
+                        </div>
+                        <div class="lane lane3">
+                            <div class="judgment-line"></div>
+                        </div>
+                        <div class="lane lane4">
+                            <div class="judgment-line"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="hit-area">
+                        <div class="hit-key">D</div>
+                        <div class="hit-key">F</div>
+                        <div class="hit-key">J</div>
+                        <div class="hit-key">K</div>
+                    </div>
+                    
+                    <div class="judgment-effect" id="judgmentEffect"></div>
+                    <div class="combo-effect" id="comboEffect">Combo!</div>
+                    <div class="debug-panel" id="debugPanel">游戏状态：准备中</div>
+                </div>
+            </div>
+            
+            <div class="side-panel">
+                <div class="game-stats">
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <div class="stat-value" id="scoreValue">0</div>
+                            <div class="stat-label">分数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="comboValue">0</div>
+                            <div class="stat-label">连击</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <div class="stat-value" id="perfectCount">0</div>
+                            <div class="stat-label">PERFECT</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="accuracyValue">100%</div>
+                            <div class="stat-label">准确率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="combo-display">
+                        <span>连击</span>
+                        <div class="combo-value" id="comboDisplay">0</div>
+                        <span>Combo!</span>
+                    </div>
+                </div>
+                
+                <div class="difficulty-selector">
+                    <h2><i class="fas fa-sliders-h"></i> 难度选择</h2>
+                    <div class="difficulty-options">
+                        <button class="difficulty-btn" data-difficulty="easy">简单</button>
+                        <button class="difficulty-btn selected" data-difficulty="normal">普通</button>
+                        <button class="difficulty-btn" data-difficulty="hard">困难</button>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="button-row">
+                        <button class="action-btn play-btn" id="playBtn">
+                            <i class="fas fa-play"></i> 开始游戏
+                        </button>
+                        <button class="action-btn restart-btn" id="restartBtn">
+                            <i class="fas fa-redo"></i> 重新开始
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-footer">
+            4K节奏大师 © 2023 | 挑战你的节奏极限
+        </div>
+    </div>
+    
+    <div class="key-overlay" id="keyOverlay" style="display:none;">
+        <h2>游戏控制说明</h2>
+        <div class="keys">
+            <div class="key-item">
+                <div>D</div>
+                <div>第一轨道</div>
+            </div>
+            <div class="key-item">
+                <div>F</div>
+                <div>第二轨道</div>
+            </div>
+            <div class="key-item">
+                <div>J</div>
+                <div>第三轨道</div>
+            </div>
+            <div class="key-item">
+                <div>K</div>
+                <div>第四轨道</div>
+            </div>
+        </div>
+        <p>当下落的音符到达判定线时，按下相应的按键进行击中。击中时机越精准，得分越高！</p>
+        <button class="start-game" id="startGameBtn">开始游戏</button>
+    </div>
+    
+    <audio id="gameMusic" preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 游戏状态和配置
+        const config = {
+            noteSpeed: 3,
+            noteInterval: 800,
+            difficulty: 'normal',
+            difficultySettings: {
+                easy: { speed: 2.5, interval: 1200, maxNotes: 100 },
+                normal: { speed: 3.5, interval: 700, maxNotes: 150 },
+                hard: { speed: 4.5, interval: 450, maxNotes: 200 }
+            },
+            judgmentWindows: {
+                perfect: 30, // ms
+                great: 80, 
+                good: 120,
+                bad: 180
+            },
+            points: {
+                perfect: 300,
+                great: 200,
+                good: 100,
+                bad: 50,
+                miss: 0
+            },
+            comboStreaks: [5, 10, 20, 50], // 连击特殊效果阈值
+            noteIdCounter: 0
+        };
+        
+        const gameState = {
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            noteCounts: { total: 0, perfect: 0, great: 0, good: 0, bad: 0, miss: 0 },
+            gameActive: false,
+            notes: [],
+            keyState: { d: false, f: false, j: false, k: false },
+            gameLoopId: null,
+            noteGeneratorId: null,
+            lastFrameTime: 0,
+            debugInfo: []
+        };
+        
+        // DOM元素
+        const dom = {
+            lanes: document.querySelectorAll('.lane'),
+            hitKeys: document.querySelectorAll('.hit-key'),
+            judgmentEffect: document.getElementById('judgmentEffect'),
+            comboEffect: document.getElementById('comboEffect'),
+            scoreValue: document.getElementById('scoreValue'),
+            comboValue: document.getElementById('comboValue'),
+            comboDisplay: document.getElementById('comboDisplay'),
+            perfectCount: document.getElementById('perfectCount'),
+            accuracyValue: document.getElementById('accuracyValue'),
+            playBtn: document.getElementById('playBtn'),
+            restartBtn: document.getElementById('restartBtn'),
+            difficultyBtns: document.querySelectorAll('.difficulty-btn'),
+            gameMusic: document.getElementById('gameMusic'),
+            keyOverlay: document.getElementById('keyOverlay'),
+            startGameBtn: document.getElementById('startGameBtn'),
+            debugPanel: document.getElementById('debugPanel')
+        };
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置游戏状态
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.noteCounts = { total: 0, perfect: 0, great: 0, good: 0, bad: 0, miss: 0 };
+            gameState.gameActive = false;
+            gameState.notes = [];
+            gameState.debugInfo = [];
+            gameState.lastFrameTime = 0;
+            
+            // 清除所有音符
+            document.querySelectorAll('.note').forEach(note => note.remove());
+            
+            // 停止游戏循环
+            if (gameState.gameLoopId) {
+                cancelAnimationFrame(gameState.gameLoopId);
+                gameState.gameLoopId = null;
+            }
+            if (gameState.noteGeneratorId) {
+                clearInterval(gameState.noteGeneratorId);
+                gameState.noteGeneratorId = null;
+            }
+            
+            // 重置按钮状态
+            dom.playBtn.innerHTML = '<i class="fas fa-play"></i> 开始游戏';
+            
+            // 更新UI
+            updateStats();
+            updateDebugPanel("游戏状态：已重置");
+        }
+        
+        // 创建新音符
+        function createNote(laneIndex) {
+            if (!gameState.gameActive) return;
+            
+            const lane = dom.lanes[laneIndex];
+            const note = document.createElement('div');
+            note.className = `note`;
+            note.dataset.id = config.noteIdCounter++;
+            note.dataset.lane = laneIndex;
+            note.dataset.created = Date.now();
+            note.style.bottom = '0%';
+            note.style.opacity = '1';
+            
+            lane.appendChild(note);
+            gameState.noteCounts.total++;
+            gameState.notes.push({
+                id: parseInt(note.dataset.id),
+                element: note,
+                lane: laneIndex,
+                hit: false,
+                missed: false,
+                bottomPosition: 0
+            });
+            
+            updateDebugPanel(`新音符创建 (#${note.dataset.id}, 轨道${laneIndex+1})`);
+        }
+        
+        // 击中音符
+        function hitNote(note, judgment) {
+            if (note.dataset.hit) return;
+            note.dataset.hit = true;
+            
+            // 添加击中效果
+            note.style.boxShadow = `0 0 20px ${getJudgmentColor(judgment)}`;
+            note.style.opacity = '0.8';
+            note.style.transform = 'scale(1.3)';
+            
+            setTimeout(() => {
+                note.remove();
+            }, 200);
+            
+            // 更新判定统计数据
+            gameState.noteCounts[judgment]++;
+            
+            // 更新连击
+            if (judgment !== 'miss') {
+                gameState.combo++;
+                if (gameState.combo > gameState.maxCombo) {
+                    gameState.maxCombo = gameState.combo;
+                }
+                
+                // 显示连击特效
+                if (config.comboStreaks.includes(gameState.combo)) {
+                    showComboEffect(gameState.combo);
+                }
+            } else {
+                gameState.combo = 0;
+            }
+            
+            // 计算分数
+            const points = config.points[judgment] + Math.floor(gameState.combo / 10) * 10;
+            gameState.score += points;
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 显示判定效果
+            showJudgmentEffect(judgment);
+            
+            updateDebugPanel(`音符击中 (#${note.dataset.id}, ${judgment})`);
+        }
+        
+        // MISS音符
+        function missNote(note) {
+            hitNote(note, 'miss');
+        }
+        
+        // 获取判定对应的颜色
+        function getJudgmentColor(judgment) {
+            const colors = {
+                perfect: '#ffec65',
+                great: '#7dff7a',
+                good: '#6a85ff',
+                bad: '#ff6ec4',
+                miss: '#ff5e62'
+            };
+            return colors[judgment];
+        }
+        
+        // 显示判定效果
+        function showJudgmentEffect(judgment) {
+            const textMap = {
+                perfect: 'PERFECT!',
+                great: 'GREAT!',
+                good: 'GOOD',
+                bad: 'BAD',
+                miss: 'MISS!'
+            };
+            
+            dom.judgmentEffect.textContent = textMap[judgment];
+            dom.judgmentEffect.className = `judgment-effect ${judgment}`;
+            dom.judgmentEffect.style.opacity = '1';
+            dom.judgmentEffect.style.transform = 'scale(1.5)';
+            
+            setTimeout(() => {
+                dom.judgmentEffect.style.opacity = '0';
+                dom.judgmentEffect.style.transform = 'scale(1) translateY(-30px)';
+            }, 800);
+        }
+        
+        // 显示连击特效
+        function showComboEffect(combo) {
+            dom.comboEffect.textContent = `${combo} Combo!`;
+            dom.comboEffect.style.opacity = '1';
+            dom.comboEffect.style.transform = 'scale(1)';
+            
+            setTimeout(() => {
+                dom.comboEffect.style.opacity = '0';
+                dom.comboEffect.style.transform = 'scale(0.5)';
+            }, 1200);
+        }
+        
+        // 更新游戏统计
+        function updateStats() {
+            dom.scoreValue.textContent = gameState.score;
+            dom.comboValue.textContent = gameState.combo;
+            dom.comboDisplay.textContent = gameState.combo;
+            dom.perfectCount.textContent = gameState.noteCounts.perfect;
+            
+            // 计算准确率
+            let accuracy = 100;
+            if (gameState.noteCounts.total > 0) {
+                const hitNotes = gameState.noteCounts.total - gameState.noteCounts.miss;
+                const accuracyValue = 
+                    (gameState.noteCounts.perfect * 1 + 
+                     gameState.noteCounts.great * 0.8 + 
+                     gameState.noteCounts.good * 0.5 + 
+                     gameState.noteCounts.bad * 0.2) / 
+                    (hitNotes || 1);
+                
+                accuracy = Math.min(100, Math.round(accuracyValue * 100));
+            }
+            
+            dom.accuracyValue.textContent = `${accuracy}%`;
+        }
+        
+        // 更新调试面板
+        function updateDebugPanel(message) {
+            gameState.debugInfo.push(message);
+            if (gameState.debugInfo.length > 5) gameState.debugInfo.shift();
+            
+            const currentState = `游戏状态: ${gameState.gameActive ? '运行中' : '暂停'} | 音符数: ${gameState.notes.length} | FPS: ${gameState.lastFrameTime > 0 ? Math.round(1000 / gameState.lastFrameTime) : 'N/A'}`;
+            
+            dom.debugPanel.textContent = currentState;
+        }
+        
+        // 游戏主循环
+        function gameLoop(timestamp) {
+            if (!gameState.gameActive) return;
+            
+            // 计算FPS
+            if (gameState.lastFrameTime > 0) {
+                const frameTime = timestamp - gameState.lastFrameTime;
+                gameState.lastFrameTime = timestamp;
+                
+                // 移动音符
+                const noteSpeed = config.difficultySettings[config.difficulty].speed;
+                const bottomThreshold = 80; // 底部阈值
+                
+                // 要移除的音符ID
+                const notesToRemove = [];
+                
+                gameState.notes.forEach((note, index) => {
+                    if (!note.element || note.hit) return;
+                    
+                    const noteEl = note.element;
+                    const bottom = parseFloat(noteEl.style.bottom) || 0;
+                    const newBottom = bottom + noteSpeed * (frameTime / 16.67);
+                    note.bottomPosition = newBottom;
+                    
+                    noteEl.style.bottom = `${newBottom}%`;
+                    
+                    // 检查是否到达判定线 (大约在屏幕20%-80%高度)
+                    if (newBottom > 20 && newBottom < 80 && !note.hit) {
+                        // 判定线位置相对于音符的位置
+                        const distanceFromLine = Math.abs(newBottom - 50); // 假设判定线在50%
+                        
+                        // 用户可能已经击中了，我们会在键盘事件中处理
+                    }
+                    
+                    // 如果音符超出屏幕底部，判定为MISS
+                    if (newBottom > bottomThreshold && !note.hit && !note.missed) {
+                        missNote(noteEl);
+                        note.missed = true;
+                        notesToRemove.push(note.id);
+                        updateDebugPanel(`音符Miss (#${note.id})`);
+                    }
+                });
+                
+                // 移除已处理的音符
+                if (notesToRemove.length > 0) {
+                    gameState.notes = gameState.notes.filter(note => !notesToRemove.includes(note.id));
+                }
+            } else {
+                gameState.lastFrameTime = timestamp;
+            }
+            
+            // 继续游戏循环
+            gameState.gameLoopId = requestAnimationFrame(gameLoop);
+        }
+        
+        // 开始游戏
+        function startGame() {
+            if (gameState.gameActive) {
+                // 暂停游戏
+                dom.playBtn.innerHTML = '<i class="fas fa-play"></i> 继续游戏';
+                gameState.gameActive = false;
+                dom.gameMusic.pause();
+                
+                if (gameState.gameLoopId) {
+                    cancelAnimationFrame(gameState.gameLoopId);
+                    gameState.gameLoopId = null;
+                }
+                
+                if (gameState.noteGeneratorId) {
+                    clearInterval(gameState.noteGeneratorId);
+                    gameState.noteGeneratorId = null;
+                }
+                
+                updateDebugPanel("游戏已暂停");
+            } else {
+                // 开始游戏
+                dom.playBtn.innerHTML = '<i class="fas fa-pause"></i> 暂停游戏';
+                gameState.gameActive = true;
+                gameState.lastFrameTime = 0;
+                
+                try {
+                    // 播放音乐
+                    dom.gameMusic.currentTime = 0;
+                    dom.gameMusic.play().catch(e => {
+                        console.log('音频播放失败:', e);
+                        updateDebugPanel('音频播放失败 - 请点击"开始游戏"按钮');
+                    });
+                    
+                    // 开始生成音符
+                    startNoteGeneration();
+                    
+                    // 开始游戏循环
+                    gameState.gameLoopId = requestAnimationFrame(gameLoop);
+                    
+                    updateDebugPanel("游戏已开始");
+                } catch (e) {
+                    console.error('游戏启动错误:', e);
+                    updateDebugPanel(`错误: ${e.message}`);
+                }
+            }
+        }
+        
+        // 开始生成音符
+        function startNoteGeneration() {
+            const settings = config.difficultySettings[config.difficulty];
+            clearInterval(gameState.noteGeneratorId);
+            
+            gameState.noteGeneratorId = setInterval(() => {
+                try {
+                    if (gameState.noteCounts.total < settings.maxNotes) {
+                        const laneIndex = Math.floor(Math.random() * 4);
+                        createNote(laneIndex);
+                    } else {
+                        // 达到最大音符数，停止生成
+                        clearInterval(gameState.noteGeneratorId);
+                        updateDebugPanel("已达到最大音符数，生成结束");
+                    }
+                } catch (e) {
+                    console.error('音符生成错误:', e);
+                    updateDebugPanel(`音符生成错误: ${e.message}`);
+                }
+            }, settings.interval);
+        }
+        
+        // 设置游戏难度
+        function setDifficulty(difficulty) {
+            config.difficulty = difficulty;
+            
+            // 更新UI
+            dom.difficultyBtns.forEach(btn => {
+                if (btn.dataset.difficulty === difficulty) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+            
+            // 如果游戏正在运行，应用新设置
+            if (gameState.gameActive) {
+                startNoteGeneration();
+            }
+            
+            updateDebugPanel(`难度设为: ${difficulty}`);
+        }
+        
+        // 键盘事件处理
+        function handleKeyDown(event) {
+            const key = event.key.toLowerCase();
+            const keyMap = { 'd': 0, 'f': 1, 'j': 2, 'k': 3 };
+            
+            if (key in keyMap) {
+                const laneIndex = keyMap[key];
+                
+                try {
+                    // 激活按键效果
+                    dom.hitKeys[laneIndex].classList.add('active');
+                    
+                    if (!gameState.gameActive) return;
+                    
+                    // 找到当前轨道的第一个未击中音符
+                    const notesInLane = gameState.notes.filter(note => 
+                        note.lane === laneIndex && !note.hit && !note.missed
+                    );
+                    
+                    if (notesInLane.length > 0) {
+                        // 找到最接近判定线的音符 (位置在屏幕40%-60%高度)
+                        let closestNote = null;
+                        let closestDistance = Infinity;
+                        
+                        notesInLane.forEach(note => {
+                            const distance = Math.abs(note.bottomPosition - 50); // 判定线在50%位置
+                            
+                            if (distance < config.judgmentWindows.bad && distance < closestDistance) {
+                                closestNote = note;
+                                closestDistance = distance;
+                            }
+                        });
+                        
+                        if (closestNote) {
+                            let judgment;
+                            if (closestDistance < config.judgmentWindows.perfect) {
+                                judgment = 'perfect';
+                            } else if (closestDistance < config.judgmentWindows.great) {
+                                judgment = 'great';
+                            } else if (closestDistance < config.judgmentWindows.good) {
+                                judgment = 'good';
+                            } else if (closestDistance < config.judgmentWindows.bad) {
+                                judgment = 'bad';
+                            } else {
+                                judgment = 'miss';
+                            }
+                            
+                            // 击中音符
+                            hitNote(closestNote.element, judgment);
+                        }
+                    }
+                } catch (e) {
+                    console.error('按键处理错误:', e);
+                    updateDebugPanel(`按键处理错误: ${e.message}`);
+                }
+            }
+        }
+        
+        function handleKeyUp(event) {
+            const key = event.key.toLowerCase();
+            const keyMap = { 'd': 0, 'f': 1, 'j': 2, 'k': 3 };
+            
+            if (key in keyMap) {
+                dom.hitKeys[keyMap[key]].classList.remove('active');
+            }
+        }
+        
+        // 初始化游戏
+        function initApp() {
+            try {
+                initGame();
+                
+                // 事件监听
+                dom.playBtn.addEventListener('click', startGame);
+                dom.restartBtn.addEventListener('click', initGame);
+                
+                dom.difficultyBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        setDifficulty(btn.dataset.difficulty);
+                    });
+                });
+                
+                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keyup', handleKeyUp);
+                
+                dom.startGameBtn.addEventListener('click', () => {
+                    dom.keyOverlay.style.display = 'none';
+                    startGame();
+                });
+                
+                // 检测音频支持
+                if (!window.AudioContext) {
+                    updateDebugPanel("警告: 您的浏览器不支持Web Audio API");
+                }
+                
+                // 延迟显示游戏界面，避免初始化问题
+                setTimeout(() => {
+                    document.querySelector('.key-overlay').style.display = 'none';
+                    updateDebugPanel("游戏初始化完成");
+                }, 100);
+            } catch (e) {
+                console.error('游戏初始化错误:', e);
+                updateDebugPanel(`严重错误: ${e.message}`);
+            }
+        }
+        
+        // 页面加载完成后初始化游戏
+        window.addEventListener('load', initApp);
+    </script>
+</body>
+</html>
