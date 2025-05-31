@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>糖果王国记忆配对挑战</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(90deg, #ff758c, #ff7eb3);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+        }
+        
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, #fce043, #ffbd4c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 228, 241, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .timer, .score, .moves {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .timer span, .score span, .moves span {
+            font-size: 1.4rem;
+            margin-left: 10px;
+            color: #ff6b6b;
+        }
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            perspective: 1000px;
+        }
+        
+        .card {
+            aspect-ratio: 1/1;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            position: relative;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            transition: transform 0.5s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card .front, .card .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: white;
+        }
+        
+        .card .back {
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            background-size: 200% 200%;
+            animation: gradientAnimation 3s ease infinite;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .card .front {
+            transform: rotateY(180deg);
+            background: white;
+            border: 5px solid #fff;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button i {
+            margin-right: 10px;
+        }
+        
+        #reset {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+        }
+        
+        #reset:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+        }
+        
+        #leaderboardBtn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+        
+        #leaderboardBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(106, 17, 203, 0.4);
+        }
+        
+        /* 排行榜部分 */
+        .leaderboard-section {
+            background: rgba(255, 245, 250, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .leaderboard-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+            font-size: 2rem;
+            position: relative;
+        }
+        
+        .leaderboard-section h2::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+        }
+        
+        .leaderboard {
+            list-style: none;
+        }
+        
+        .leaderboard li {
+            display: flex;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background: white;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .leaderboard li:first-child {
+            background: linear-gradient(to right, rgba(255, 215, 0, 0.3), rgba(255, 255, 240, 0.5));
+        }
+        
+        .leaderboard li:nth-child(2) {
+            background: linear-gradient(to right, rgba(192, 192, 192, 0.2), rgba(245, 245, 245, 0.5));
+        }
+        
+        .leaderboard li:nth-child(3) {
+            background: linear-gradient(to right, rgba(205, 127, 50, 0.2), rgba(255, 245, 238, 0.5));
+        }
+        
+        .rank {
+            width: 30px;
+            height: 30px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .player-info {
+            flex: 1;
+        }
+        
+        .player-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .player-score {
+            font-size: 1.1rem;
+            color: #ff6b6b;
+        }
+        
+        /* 胜利弹窗 */
+        .win-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .modal-content {
+            background: linear-gradient(to bottom right, #ffffff, #fff9fb);
+            border-radius: 20px;
+            text-align: center;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            animation: modalPopIn 0.4s forwards;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @keyframes modalPopIn {
+            to { transform: scale(1); }
+        }
+        
+        .modal-content::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+        
+        .modal-content h2 {
+            font-size: 2.5rem;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #ff6b6b, #ff9a9e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats {
+            background: rgba(255, 228, 241, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .stats p {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+        
+        .stats span {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+        
+        #saveScore {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            font-size: 1.1rem;
+            padding: 12px 30px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        #username {
+            padding: 10px 15px;
+            border: 2px solid #ffd0d6;
+            border-radius: 50px;
+            width: 100%;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #username:focus {
+            border-color: #ff6b6b;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ff9a9e;
+            border-radius: 50%;
+            animation: fall 3s linear infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes fall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-candy-cane"></i> 糖果王国记忆挑战</h1>
+            <p>翻转卡片找到匹配的糖果，完成游戏挑战排行榜！</p>
+        </header>
+        
+        <div class="game-info">
+            <div class="timer">
+                <i class="fas fa-clock"></i> 时间: <span id="time">60</span>s
+            </div>
+            <div class="score">
+                <i class="fas fa-star"></i> 分数: <span id="score">0</span>
+            </div>
+            <div class="moves">
+                <i class="fas fa-shoe-prints"></i> 步数: <span id="moves">0</span>
+            </div>
+        </div>
+        
+        <div class="game-grid" id="gameGrid">
+            <!-- 卡片将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="controls">
+            <button id="reset">
+                <i class="fas fa-redo"></i> 重新开始
+            </button>
+            <button id="leaderboardBtn">
+                <i class="fas fa-trophy"></i> 排行榜
+            </button>
+        </div>
+        
+        <div class="leaderboard-section" id="leaderboardSection">
+            <h2><i class="fas fa-crown"></i> 糖果英雄榜</h2>
+            <ul class="leaderboard" id="leaderboard">
+                <!-- 排行榜将通过JavaScript动态生成 -->
+            </ul>
+        </div>
+    </div>
+    
+    <div class="win-modal" id="winModal">
+        <div class="modal-content">
+            <h2>恭喜您赢了！🎉</h2>
+            <p>您已经成功完成了糖果王国挑战！</p>
+            
+            <div class="stats">
+                <p>用时: <span id="finalTime">0</span>s</p>
+                <p>步数: <span id="finalMoves">0</span></p>
+                <p>得分: <span id="finalScore">0</span></p>
+            </div>
+            
+            <input type="text" id="username" placeholder="输入您的名字" maxlength="20">
+            <button id="saveScore"><i class="fas fa-medal"></i> 保存分数</button>
+        </div>
+    </div>
+    
+    <script>
+        // 游戏数据
+        const candyTypes = ['🍭', '🍬', '🍫', '🍡', '🍩', '🍪', '🧁', '🍦', '🍰', '🍯'];
+        let cards = [];
+        let flippedCards = [];
+        let gameStarted = false;
+        let moves = 0;
+        let score = 0;
+        let timeLeft = 60;
+        let timer;
+        let gameCompleted = false;
+        
+        // 从本地存储获取排行榜或初始化
+        let leaderboard = JSON.parse(localStorage.getItem('candyLeaderboard')) || [];
+        
+        // DOM元素
+        const gameGrid = document.getElementById('gameGrid');
+        const timerDisplay = document.getElementById('time');
+        const movesDisplay = document.getElementById('moves');
+        const scoreDisplay = document.getElementById('score');
+        const resetBtn = document.getElementById('reset');
+        const leaderboardBtn = document.getElementById('leaderboardBtn');
+        const leaderboardSection = document.getElementById('leaderboardSection');
+        const leaderboardList = document.getElementById('leaderboard');
+        const winModal = document.getElementById('winModal');
+        const finalTime = document.getElementById('finalTime');
+        const finalMoves = document.getElementById('finalMoves');
+        const finalScore = document.getElementById('finalScore');
+        const usernameInput = document.getElementById('username');
+        const saveScoreBtn = document.getElementById('saveScore');
+        
+        // 初始化游戏
+        function initGame() {
+            gameGrid.innerHTML = '';
+            flippedCards = [];
+            moves = 0;
+            score = 0;
+            timeLeft = 60;
+            gameStarted = false;
+            gameCompleted = false;
+            
+            movesDisplay.textContent = moves;
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+            
+            if (timer) clearInterval(timer);
+            
+            // 创建卡片对
+            const gameCards = [];
+            for (let i = 0; i < 8; i++) {
+                gameCards.push(candyTypes[i]);
+                gameCards.push(candyTypes[i]);
+            }
+            
+            // 洗牌
+            cards = shuffleArray(gameCards);
+            
+            // 创建卡片元素
+            cards.forEach((candy, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                
+                const back = document.createElement('div');
+                back.className = 'back';
+                back.innerHTML = '?';
+                
+                const front = document.createElement('div');
+                front.className = 'front';
+                front.textContent = candy;
+                
+                card.appendChild(back);
+                card.appendChild(front);
+                
+                card.addEventListener('click', flipCard);
+                gameGrid.appendChild(card);
+            });
+            
+            // 隐藏排行榜
+            leaderboardSection.style.display = 'none';
+        }
+        
+        // 洗牌算法
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // 翻转卡片
+        function flipCard() {
+            // 游戏已结束或卡片已匹配
+            if (gameCompleted || this.classList.contains('flipped') || flippedCards.length === 2) {
+                return;
+            }
+            
+            // 开始计时
+            if (!gameStarted) {
+                gameStarted = true;
+                startTimer();
+            }
+            
+            // 翻转卡片
+            this.classList.add('flipped');
+            flippedCards.push(this);
+            
+            // 检查匹配
+            if (flippedCards.length === 2) {
+                moves++;
+                movesDisplay.textContent = moves;
+                
+                setTimeout(checkMatch, 500);
+            }
+        }
+        
+        // 检查卡片是否匹配
+        function checkMatch() {
+            const card1 = flippedCards[0];
+            const card2 = flippedCards[1];
+            
+            const index1 = card1.dataset.index;
+            const index2 = card2.dataset.index;
+            
+            if (cards[index1] === cards[index2]) {
+                // 匹配成功
+                card1.style.visibility = 'hidden';
+                card2.style.visibility = 'hidden';
+                
+                // 增加分数
+                score += 50;
+                if (timeLeft > 45) score += 30; // 时间奖励
+                scoreDisplay.textContent = score;
+                
+                // 检查游戏是否完成
+                setTimeout(checkGameCompletion, 300);
+            } else {
+                // 不匹配，翻转回来
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+            }
+            
+            flippedCards = [];
+        }
+        
+        // 检查游戏是否完成
+        function checkGameCompletion() {
+            const visibleCards = document.querySelectorAll('.card:not(.flipped):not([style*="visibility: hidden"])');
+            if (visibleCards.length === 0) {
+                gameCompleted = true;
+                clearInterval(timer);
+                showWinModal();
+            }
+        }
+        
+        // 开始计时器
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    gameCompleted = true;
+                    alert('时间到了！游戏结束。请重新开始游戏。');
+                }
+            }, 1000);
+        }
+        
+        // 显示胜利弹窗
+        function showWinModal() {
+            finalTime.textContent = 60 - timeLeft;
+            finalMoves.textContent = moves;
+            finalScore.textContent = score;
+            winModal.style.display = 'flex';
+            createConfetti();
+        }
+        
+        // 创建五彩纸屑效果
+        function createConfetti() {
+            const modalContent = document.querySelector('.modal-content');
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = -10 + 'px';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 75%)`;
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.animationDuration = Math.random() * 2 + 1 + 's';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                modalContent.appendChild(confetti);
+                
+                // 移除动画结束的元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        // 保存分数到排行榜
+        function saveToLeaderboard() {
+            const username = usernameInput.value.trim() || '糖果小英雄';
+            const playerScore = score;
+            
+            leaderboard.push({
+                name: username,
+                score: playerScore,
+                moves: moves,
+                time: 60 - timeLeft,
+                date: new Date().toLocaleDateString()
+            });
+            
+            // 按分数排序
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // 只保留前10名
+            if (leaderboard.length > 10) {
+                leaderboard = leaderboard.slice(0, 10);
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem('candyLeaderboard', JSON.stringify(leaderboard));
+            
+            // 刷新排行榜显示
+            updateLeaderboard();
+            
+            // 隐藏弹窗
+            winModal.style.display = 'none';
+            
+            // 显示排行榜
+            leaderboardSection.style.display = 'block';
+        }
+        
+        // 更新排行榜显示
+        function updateLeaderboard() {
+            leaderboardList.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                const emptyMsg = document.createElement('li');
+                emptyMsg.textContent = '排行榜为空！成为第一个上榜的英雄吧！';
+                emptyMsg.style.justifyContent = 'center';
+                leaderboardList.appendChild(emptyMsg);
+                return;
+            }
+            
+            leaderboard.forEach((player, index) => {
+                const listItem = document.createElement('li');
+                
+                const rankEl = document.createElement('div');
+                rankEl.className = 'rank';
+                rankEl.textContent = index + 1;
+                
+                const playerInfo = document.createElement('div');
+                playerInfo.className = 'player-info';
+                
+                const nameEl = document.createElement('div');
+                nameEl.className = 'player-name';
+                nameEl.textContent = player.name;
+                
+                const scoreEl = document.createElement('div');
+                scoreEl.className = 'player-score';
+                scoreEl.textContent = `分数: ${player.score} (${player.time}s, ${player.moves}步)`;
+                
+                playerInfo.appendChild(nameEl);
+                playerInfo.appendChild(scoreEl);
+                
+                listItem.appendChild(rankEl);
+                listItem.appendChild(playerInfo);
+                
+                leaderboardList.appendChild(listItem);
+            });
+        }
+        
+        // 事件监听器
+        resetBtn.addEventListener('click', initGame);
+        
+        leaderboardBtn.addEventListener('click', () => {
+            leaderboardSection.style.display = leaderboardSection.style.display === 'block' ? 'none' : 'block';
+            updateLeaderboard();
+        });
+        
+        saveScoreBtn.addEventListener('click', saveToLeaderboard);
+        
+        // 按回车保存分数
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveToLeaderboard();
+            }
+        });
+        
+        // 初始化游戏
+        initGame();
+        
+        // 初始化排行榜
+        updateLeaderboard();
+    </script>
+</body>
+</html>
