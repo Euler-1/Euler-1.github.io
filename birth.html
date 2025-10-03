@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>李昕恩15岁生日快乐！</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+QingKe+HuangYou&display=swap');
+        
+        body {
+            font-family: 'ZCOOL QingKe HuangYou', cursive;
+            background: linear-gradient(135deg, #fff0f6, #ffdeeb);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            text-align: center;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23ff4d8f" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8 s8,3.59,8,8S16.41,20,12,20z"/></svg>'), auto;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        h1 {
+            font-family: 'Ma Shan Zheng', cursive;
+            color: #ff4d8f;
+            font-size: 3.5em;
+            text-shadow: 3px 3px 0px rgba(255, 192, 203, 0.5);
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
+            transition: all 0.3s;
+        }
+        
+        h1:hover {
+            transform: scale(1.05);
+            color: #ff1a75;
+        }
+        
+        .age {
+            font-size: 1.8em;
+            color: #ff85a2;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+        
+        .interactive-area {
+            width: 100%;
+            height: 300px;
+            margin: 20px auto;
+            background-color: white;
+            border: 15px solid #ffb6c1;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(255, 105, 180, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #drawingCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: #fff9fa;
+        }
+        
+        .drawing-tools {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .tool-btn {
+            padding: 8px 15px;
+            background-color: #ff85a2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .tool-btn:hover {
+            background-color: #ff4d8f;
+            transform: translateY(-3px);
+        }
+        
+        .message {
+            background-color: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
+            position: relative;
+            animation: fadeIn 2s;
+            transition: all 0.5s;
+            max-height: 150px;
+            overflow: hidden;
+        }
+        
+        .message.expanded {
+            max-height: 1000px;
+        }
+        
+        .message-toggle {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: none;
+            border: none;
+            color: #ff4d8f;
+            font-size: 1.5em;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+        }
+        
+        .message p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin: 15px 0;
+            color: #555;
+        }
+        
+        .highlight {
+            color: #ff4d8f;
+            font-weight: bold;
+        }
+        
+        .painting-corner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23ffb6c1" d="M50 0 L100 50 L50 100 L0 50 Z"/></svg>');
+            background-size: contain;
+            opacity: 0.6;
+            animation: spin 30s linear infinite;
+            cursor: pointer;
+        }
+        
+        .top-left {
+            top: -30px;
+            left: -30px;
+        }
+        
+        .bottom-right {
+            bottom: -30px;
+            right: -30px;
+        }
+        
+        .click-effect {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 77, 143, 0.7);
+            pointer-events: none;
+            animation: clickAnim 1s forwards;
+        }
+        
+        .birthday-cake {
+            font-size: 3em;
+            margin: 20px 0;
+            animation: bounce 1s infinite alternate;
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        .funny-quote {
+            font-style: italic;
+            color: #ff85a2;
+            margin: 20px 0;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+        
+        .funny-quote:hover {
+            transform: rotate(2deg);
+            color: #ff4d8f;
+        }
+        
+        .hidden-wish {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
+            margin: 15px 0;
+        }
+        
+        .hidden-wish.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes clickAnim {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="painting-corner top-left" id="corner1"></div>
+    <div class="painting-corner bottom-right" id="corner2"></div>
+    
+    <div class="container">
+        <h1 id="mainTitle">李昕恩</h1>
+        <div class="age">15岁生日快乐！</div>
+        
+        <div class="interactive-area">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+        
+        <div class="drawing-tools">
+            <button class="tool-btn" data-color="#ff4d8f">粉色</button>
+            <button class="tool-btn" data-color="#ff85a2">浅粉</button>
+            <button class="tool-btn" data-color="#ffb6c1">淡粉</button>
+            <button class="tool-btn" data-color="#000000">黑色</button>
+            <button class="tool-btn" id="clearBtn">清空</button>
+            <button class="tool-btn" id="saveBtn">保存</button>
+        </div>
+        
+        <div class="birthday-cake" id="cake">🎂</div>
+        
+        <div class="message" id="message">
+            <p>亲爱的<span class="highlight">昕恩</span>：</p>
+            <p><span class="highlight">OwO</span>记得感谢我把我的github贡献出来</p>
+            <p class="hidden-wish">祝你新的一岁：</p>
+            <p class="hidden-wish">🎨 画技突飞猛进，成为下一个毕加恩（毕加索+昕恩）</p>
+            <p class="hidden-wish">😂 每天都有开怀大笑的时刻</p>
+            <p class="hidden-wish">💖 被粉色泡泡般的幸福包围</p>
+            <p class="hidden-wish">have a good time</p>
+            <button class="message-toggle">▼</button>
+        </div>
+        
+        <div class="funny-quote" id="randomQuote">
+            "年龄只是数字，除非你15岁——那意味着你可以开始假装成熟了！"
+        </div>
+        
+        <div style="margin: 30px 0;">
+            <div style="font-size: 2em; margin-bottom: 10px;">🎉 🎈 🎁</div>
+            <p>愿你的一年比你的画作还要绚丽多彩！</p>
+        </div>
+    </div>
+    
+    <script>
+        // 绘画功能
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let currentColor = '#ff4d8f';
+        let currentX = 0;
+        let currentY = 0;
+        
+        // 设置画布实际大小
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // 绘画功能
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('touchstart', startDrawing);
+        
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchmove', draw);
+        
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPosition(e);
+            currentX = pos.x;
+            currentY = pos.y;
+            
+            // 点击效果
+            createClickEffect(pos.x, pos.y);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const pos = getPosition(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            currentX = pos.x;
+            currentY = pos.y;
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function getPosition(e) {
+            let x, y;
+            const rect = canvas.getBoundingClientRect();
+            
+            if (e.type.includes('touch')) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+            
+            return { x, y };
+        }
+        
+        // 颜色选择
+        document.querySelectorAll('.tool-btn[data-color]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentColor = this.dataset.color;
+            });
+        });
+        
+        // 清空画布
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+        
+        // 保存画作
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            const link = document.createElement('a');
+            link.download = '昕恩的生日画作.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // 点击效果
+        function createClickEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.style.left = (x - 10) + 'px';
+            effect.style.top = (y - 10) + 'px';
+            effect.style.backgroundColor = currentColor;
+            canvas.parentElement.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 1000);
+        }
+        
+        // 消息展开/收起
+        const message = document.getElementById('message');
+        const messageToggle = document.querySelector('.message-toggle');
+        const hiddenWishes = document.querySelectorAll('.hidden-wish');
+        
+        messageToggle.addEventListener('click', function() {
+            message.classList.toggle('expanded');
+            this.textContent = message.classList.contains('expanded') ? '▲' : '▼';
+            
+            // 显示隐藏的祝福语
+            if (message.classList.contains('expanded')) {
+                hiddenWishes.forEach((wish, index) => {
+                    setTimeout(() => {
+                        wish.classList.add('show');
+                    }, index * 200);
+                });
+            } else {
+                hiddenWishes.forEach(wish => {
+                    wish.classList.remove('show');
+                });
+            }
+        });
+        
+        // 随机名言
+        const quotes = [
+            "15岁的你：一半孩子，一半艺术家，100%可爱！"
+        ];
+        
+        document.getElementById('randomQuote').addEventListener('click', function() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            this.textContent = quotes[randomIndex];
+            this.style.transform = 'rotate(' + (Math.random() * 6 - 3) + 'deg)';
+        });
+        
+        // 蛋糕动画
+        const cake = document.getElementById('cake');
+        cake.addEventListener('click', function() {
+            this.style.transform = 'scale(1.5)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 300);
+            
+            // 创建蜡烛效果
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const flame = document.createElement('div');
+                    flame.innerHTML = '🕯️';
+                    flame.style.position = 'absolute';
+                    flame.style.left = (Math.random() * window.innerWidth) + 'px';
+                    flame.style.top = '-50px';
+                    flame.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                    flame.style.animation = `float ${Math.random() * 3 + 2}s linear forwards`;
+                    document.body.appendChild(flame);
+                    
+                    setTimeout(() => {
+                        flame.remove();
+                    }, 3000);
+                }, i * 100);
+            }
+        });
+        
+        // 角落点击效果
+        document.getElementById('corner1').addEventListener('click', function() {
+            this.style.animation = 'none';
+            setTimeout(() => {
+                this.style.animation = 'spin 30s linear infinite';
+            }, 10);
+        });
+        
+        document.getElementById('corner2').addEventListener('click', function() {
+            this.style.transform = 'scale(1.5)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 300);
+        });
+        
+        // 标题点击效果
+        document.getElementById('mainTitle').addEventListener('click', function() {
+            this.style.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+        });
+        
+        // 页面加载时显示一些动画
+        window.onload = function() {
+            // 显示一些初始动画
+            setTimeout(() => {
+                document.querySelector('.funny-quote').style.transform = 'rotate(2deg)';
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
